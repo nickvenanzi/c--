@@ -46,13 +46,6 @@ make run-day DAY=week01/day01_auto_decltype
 make benchmark-day DAY=week01/day01_auto_decltype
 ```
 
-### Create Learning Notes
-
-```bash
-make notes DAY=week01/day01_auto_decltype
-# Edit the generated notes file in notes/week01/day01_auto_decltype.md
-```
-
 ### Run Entire Week
 
 ```bash
