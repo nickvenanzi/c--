@@ -227,16 +227,38 @@ TEST_CASE("Storage Duration Classes", "[storage][duration][day5]") {
         // 2. Compare with static variables in multi-threaded context
         // 3. Demonstrate initialization and destruction per thread
         
-        // Example structure:
-        // thread_local int tls_counter = 0;
-        // 
-        // auto worker = []() {
-        //     tls_counter++;
-        //     std::cout << "Thread " << std::this_thread::get_id() 
-        //               << " counter: " << tls_counter << std::endl;
-        // };
+        std::cerr << "\n=== Thread-Local Storage ===" << std::endl;
         
-        cpp_mastery::Logger::info("TODO: Implement thread-local storage demonstration");
+        // Variables to demonstrate the difference
+        thread_local int tls_counter = 0;      // Each thread gets its own copy
+        std::atomic<int> shared_counter{};         // Shared between all threads
+        
+        auto worker = [&](int thread_id) {
+            for (int i = 0; i < 5; ++i) {
+                tls_counter++;      // Each thread modifies its own copy
+                shared_counter++;   // All threads modify the same variable
+                
+                std::cerr << "Thread " << thread_id 
+                         << " - TLS counter: " << tls_counter 
+                         << ", Shared counter: " << shared_counter << std::endl;
+                
+                // Small delay to see interleaving
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+            }
+        };
+        
+        // Create two threads
+        std::thread t1(worker, 1);
+        std::thread t2(worker, 2);
+        
+        // Wait for both threads to complete
+        t1.join();
+        t2.join();
+        
+        std::cerr << "Main thread - TLS counter: " << tls_counter 
+                 << ", Final shared counter: " << shared_counter << std::endl;
+        
+        cpp_mastery::Logger::info("Thread-local storage demonstration completed");
     }
 }
 
@@ -584,116 +606,5 @@ TEST_CASE("Performance Implications of Storage Classes", "[performance][storage]
         // 4. Heap allocated - depends on allocation patterns
         
         cpp_mastery::Logger::info("TODO: Implement cache locality analysis");
-    }
-}
-
-// =============================================================================
-// EXERCISES FOR COMPLETION
-// =============================================================================
-
-TEST_CASE("Day 5 Exercises - Complete These!", "[exercises][day5]") {
-    
-    SECTION("Exercise 1: Scope-aware resource manager") {
-        // TODO: Implement a resource manager that uses RAII principles
-        // Requirements:
-        // 1. Automatic resource acquisition in constructor
-        // 2. Automatic resource release in destructor
-        // 3. Support for different resource types (files, memory, handles)
-        // 4. Proper exception safety
-        
-        // Example structure:
-        // template<typename Resource, typename Deleter>
-        // class ScopeGuard {
-        //     Resource resource_;
-        //     Deleter deleter_;
-        // public:
-        //     ScopeGuard(Resource r, Deleter d) : resource_(r), deleter_(d) {}
-        //     ~ScopeGuard() { deleter_(resource_); }
-        // };
-        
-        cpp_mastery::Logger::info("TODO: Implement scope-aware resource manager");
-    }
-    
-    SECTION("Exercise 2: Static initialization order solver") {
-        // TODO: Implement solutions to static initialization order problems
-        // Requirements:
-        // 1. Demonstrate the static initialization fiasco
-        // 2. Implement Meyer's singleton pattern
-        // 3. Create initialization-on-first-use idiom
-        // 4. Compare different approaches' performance and safety
-        
-        // Example singleton:
-        // class Singleton {
-        // public:
-        //     static Singleton& instance() {
-        //         static Singleton inst;  // Initialized on first call
-        //         return inst;
-        //     }
-        // private:
-        //     Singleton() = default;
-        // };
-        
-        cpp_mastery::Logger::info("TODO: Implement static initialization order solver");
-    }
-    
-    SECTION("Exercise 3: Memory leak detector") {
-        // TODO: Implement a simple memory leak detection system
-        // Requirements:
-        // 1. Track all dynamic allocations and deallocations
-        // 2. Report leaks at program termination
-        // 3. Provide stack traces for leak locations
-        // 4. Integration with existing code (operator new/delete overloading)
-        
-        // Example structure:
-        // class LeakDetector {
-        //     std::map<void*, AllocInfo> allocations_;
-        // public:
-        //     void record_allocation(void* ptr, size_t size, const char* file, int line);
-        //     void record_deallocation(void* ptr);
-        //     void report_leaks();
-        // };
-        
-        cpp_mastery::Logger::info("TODO: Implement memory leak detector");
-    }
-    
-    SECTION("Exercise 4: Lifetime-aware smart pointer") {
-        // TODO: Implement custom smart pointers with different semantics
-        // Requirements:
-        // 1. unique_ptr equivalent with custom deleters
-        // 2. shared_ptr equivalent with reference counting
-        // 3. weak_ptr equivalent to break circular references
-        // 4. Performance comparison with standard library versions
-        
-        // Example structure:
-        // template<typename T, typename Deleter = std::default_delete<T>>
-        // class unique_ptr {
-        //     T* ptr_;
-        //     Deleter deleter_;
-        // public:
-        //     explicit unique_ptr(T* p = nullptr) : ptr_(p) {}
-        //     ~unique_ptr() { if (ptr_) deleter_(ptr_); }
-        //     // Move semantics, no copy
-        // };
-        
-        cpp_mastery::Logger::info("TODO: Implement lifetime-aware smart pointer");
-    }
-    
-    SECTION("Exercise 5: Thread-safe static initialization") {
-        // TODO: Implement thread-safe static initialization patterns
-        // Requirements:
-        // 1. Demonstrate race conditions in static initialization
-        // 2. Implement thread-safe singleton patterns
-        // 3. Use std::once_flag and std::call_once
-        // 4. Performance analysis of different thread-safe approaches
-        
-        // Example structure:
-        // class ThreadSafeSingleton {
-        //     static std::once_flag initialized_;
-        //     static std::unique_ptr<ThreadSafeSingleton> instance_;
-        // public:
-        //     static ThreadSafeSingleton& get_instance();
-        // };
-        
-        cpp_mastery::Logger::info("TODO: Implement thread-safe static initialization");
     }
 }
