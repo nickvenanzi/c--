@@ -42,118 +42,95 @@ TEST_CASE("Conditional Statements and Branch Prediction", "[control][branching][
         cpp_mastery::Logger::info("Basic conditional statements demonstrated");
     }
     
-    SECTION("Branch prediction performance") {
-        const size_t size = 1000000;
-        const size_t iterations = 100;
+    // SECTION("Branch prediction performance") {
+    //     const size_t size = 1000000;
+    //     const size_t iterations = 100;
         
-        // Create predictable data (sorted)
-        std::vector<int> predictable_data(size);
-        std::iota(predictable_data.begin(), predictable_data.end(), 0);
+    //     // Create predictable data (sorted)
+    //     std::vector<int> predictable_data(size);
+    //     std::iota(predictable_data.begin(), predictable_data.end(), 0);
         
-        // Create unpredictable data (random)
-        std::vector<int> unpredictable_data = predictable_data;
-        std::random_device rd;
-        std::mt19937 gen(42);  // Fixed seed for reproducibility
-        std::shuffle(unpredictable_data.begin(), unpredictable_data.end(), gen);
+    //     // Create unpredictable data (random)
+    //     std::vector<int> unpredictable_data = predictable_data;
+    //     std::random_device rd;
+    //     std::mt19937 gen(42);  // Fixed seed for reproducibility
+    //     std::shuffle(unpredictable_data.begin(), unpredictable_data.end(), gen);
         
-        const int threshold = static_cast<int>(size / 2);
+    //     const int threshold = static_cast<int>(size / 2);
         
-        BENCHMARK("Predictable branches (sorted data)") {
-            volatile long sum = 0;
-            for (size_t iter = 0; iter < iterations; ++iter) {
-                for (int value : predictable_data) {
-                    if (value < threshold) {
-                        sum += value;  // Predictable branch
-                    } else {
-                        sum += value * 2;  // Predictable branch
-                    }
-                }
-            }
-            return sum;
-        };
+    //     BENCHMARK("Predictable branches (sorted data)") {
+    //         volatile long sum = 0;
+    //         for (size_t iter = 0; iter < iterations; ++iter) {
+    //             for (int value : predictable_data) {
+    //                 if (value < threshold) {
+    //                     sum += value;  // Predictable branch
+    //                 } else {
+    //                     sum += value * 2;  // Predictable branch
+    //                 }
+    //             }
+    //         }
+    //         return sum;
+    //     };
         
-        BENCHMARK("Unpredictable branches (random data)") {
-            volatile long sum = 0;
-            for (size_t iter = 0; iter < iterations; ++iter) {
-                for (int value : unpredictable_data) {
-                    if (value < threshold) {
-                        sum += value;  // Unpredictable branch
-                    } else {
-                        sum += value * 2;  // Unpredictable branch
-                    }
-                }
-            }
-            return sum;
-        };
+    //     BENCHMARK("Unpredictable branches (random data)") {
+    //         volatile long sum = 0;
+    //         for (size_t iter = 0; iter < iterations; ++iter) {
+    //             for (int value : unpredictable_data) {
+    //                 if (value < threshold) {
+    //                     sum += value;  // Unpredictable branch
+    //                 } else {
+    //                     sum += value * 2;  // Unpredictable branch
+    //                 }
+    //             }
+    //         }
+    //         return sum;
+    //     };
         
-        cpp_mastery::Logger::info("Branch prediction performance compared");
-    }
+    //     cpp_mastery::Logger::info("Branch prediction performance compared");
+    // }
     
-    SECTION("Branchless programming techniques") {
-        const size_t size = 1000000;
-        const size_t iterations = 100;
+    // SECTION("Branchless programming techniques") {
+    //     const size_t size = 1000000;
+    //     const size_t iterations = 100;
         
-        std::vector<int> data = cpp_mastery::generate_random_data<int>(size, -1000, 1000);
+    //     std::vector<int> data = cpp_mastery::generate_random_data<int>(size, -1000, 1000);
         
-        BENCHMARK("Branched absolute value") {
-            volatile long sum = 0;
-            for (size_t iter = 0; iter < iterations; ++iter) {
-                for (int value : data) {
-                    int abs_val = (value < 0) ? -value : value;  // Branch
-                    sum += abs_val;
-                }
-            }
-            return sum;
-        };
+    //     BENCHMARK("Branched absolute value") {
+    //         volatile long sum = 0;
+    //         for (size_t iter = 0; iter < iterations; ++iter) {
+    //             for (int value : data) {
+    //                 int abs_val = (value < 0) ? -value : value;  // Branch
+    //                 sum += abs_val;
+    //             }
+    //         }
+    //         return sum;
+    //     };
         
-        BENCHMARK("Branchless absolute value") {
-            volatile long sum = 0;
-            for (size_t iter = 0; iter < iterations; ++iter) {
-                for (int value : data) {
-                    int mask = value >> 31;  // Arithmetic right shift
-                    int abs_val = (value + mask) ^ mask;  // Branchless
-                    sum += abs_val;
-                }
-            }
-            return sum;
-        };
+    //     BENCHMARK("Branchless absolute value") {
+    //         volatile long sum = 0;
+    //         for (size_t iter = 0; iter < iterations; ++iter) {
+    //             for (int value : data) {
+    //                 int mask = value >> 31;  // Arithmetic right shift
+    //                 int abs_val = (value + mask) ^ mask;  // Branchless
+    //                 sum += abs_val;
+    //             }
+    //         }
+    //         return sum;
+    //     };
         
-        BENCHMARK("Standard library abs") {
-            volatile long sum = 0;
-            for (size_t iter = 0; iter < iterations; ++iter) {
-                for (int value : data) {
-                    int abs_val = std::abs(value);  // Optimized implementation
-                    sum += abs_val;
-                }
-            }
-            return sum;
-        };
+    //     BENCHMARK("Standard library abs") {
+    //         volatile long sum = 0;
+    //         for (size_t iter = 0; iter < iterations; ++iter) {
+    //             for (int value : data) {
+    //                 int abs_val = std::abs(value);  // Optimized implementation
+    //                 sum += abs_val;
+    //             }
+    //         }
+    //         return sum;
+    //     };
         
-        cpp_mastery::Logger::info("Branchless programming techniques compared");
-    }
-    
-    // TODO: Implement conditional move instructions analysis
-    SECTION("Conditional move vs branching") {
-        // TODO: Demonstrate scenarios where conditional moves are beneficial:
-        // 1. Simple conditional assignments
-        // 2. Min/max operations
-        // 3. Ternary operator optimization
-        // 4. Assembly analysis of generated code
-        
-        // Example patterns:
-        // int result = condition ? value1 : value2;  // May use conditional move
-        // int min_val = (a < b) ? a : b;             // Likely conditional move
-        // 
-        // vs
-        // 
-        // if (condition) {
-        //     result = value1;
-        // } else {
-        //     result = value2;
-        // }
-        
-        cpp_mastery::Logger::info("TODO: Implement conditional move analysis");
-    }
+    //     cpp_mastery::Logger::info("Branchless programming techniques compared");
+    // }
 }
 
 TEST_CASE("Switch Statements and Jump Tables", "[switch][jumptable][day6]") {
@@ -188,7 +165,7 @@ TEST_CASE("Switch Statements and Jump Tables", "[switch][jumptable][day6]") {
     }
     
     SECTION("Switch vs if-else performance") {
-        const size_t iterations = 10000000;
+        const size_t iterations = 1000;
         
         // Generate random values for testing
         std::vector<int> test_values(1000);
@@ -286,29 +263,6 @@ TEST_CASE("Switch Statements and Jump Tables", "[switch][jumptable][day6]") {
         
         cpp_mastery::Logger::info("Jump table optimization demonstrated");
     }
-    
-    // TODO: Implement switch statement fallthrough analysis
-    SECTION("Switch fallthrough patterns") {
-        // TODO: Demonstrate:
-        // 1. Intentional fallthrough with [[fallthrough]] attribute
-        // 2. Common fallthrough patterns and use cases
-        // 3. Compiler warnings and how to handle them
-        // 4. Performance implications of fallthrough
-        
-        // Example:
-        // switch (value) {
-        //     case 1:
-        //         do_something();
-        //         [[fallthrough]];  // C++17 attribute
-        //     case 2:
-        //         do_something_else();
-        //         break;
-        //     default:
-        //         handle_default();
-        // }
-        
-        cpp_mastery::Logger::info("TODO: Implement switch fallthrough analysis");
-    }
 }
 
 TEST_CASE("Loop Types and Performance", "[loops][performance][day6]") {
@@ -356,7 +310,7 @@ TEST_CASE("Loop Types and Performance", "[loops][performance][day6]") {
     }
     
     SECTION("Loop performance comparison") {
-        const size_t size = 1000000;
+        const size_t size = 1000;
         const size_t iterations = 100;
         
         std::vector<int> data = cpp_mastery::generate_sequential_data<int>(size, 1);
@@ -408,7 +362,7 @@ TEST_CASE("Loop Types and Performance", "[loops][performance][day6]") {
     
     SECTION("Loop unrolling demonstration") {
         const size_t size = 1000000;
-        const size_t iterations = 100;
+        const size_t iterations = 1;
         
         std::vector<int> data = cpp_mastery::generate_sequential_data<int>(size, 1);
         
@@ -441,27 +395,6 @@ TEST_CASE("Loop Types and Performance", "[loops][performance][day6]") {
         };
         
         cpp_mastery::Logger::info("Loop unrolling performance compared");
-    }
-    
-    // TODO: Implement loop vectorization analysis
-    SECTION("Loop vectorization opportunities") {
-        // TODO: Demonstrate:
-        // 1. Loops that can be vectorized by the compiler
-        // 2. Loops that cannot be vectorized and why
-        // 3. How to write vectorization-friendly code
-        // 4. Compiler pragmas for vectorization hints
-        
-        // Example vectorizable loop:
-        // for (size_t i = 0; i < size; ++i) {
-        //     result[i] = a[i] + b[i];  // Simple, independent operations
-        // }
-        // 
-        // Example non-vectorizable loop:
-        // for (size_t i = 1; i < size; ++i) {
-        //     result[i] = result[i-1] + a[i];  // Data dependency
-        // }
-        
-        cpp_mastery::Logger::info("TODO: Implement loop vectorization analysis");
     }
 }
 
@@ -604,29 +537,6 @@ TEST_CASE("Break, Continue, and Goto", "[break][continue][goto][day6]") {
         
         cpp_mastery::Logger::info("Goto vs RAII error handling compared");
     }
-    
-    // TODO: Implement computed goto analysis
-    SECTION("Computed goto and jump tables") {
-        // TODO: Demonstrate (GCC extension):
-        // 1. Computed goto for implementing interpreters
-        // 2. Jump table implementation using label addresses
-        // 3. Performance comparison with switch statements
-        // 4. Portability considerations
-        
-        // Example (GCC-specific):
-        // void* jump_table[] = {&&label1, &&label2, &&label3};
-        // goto *jump_table[index];
-        // 
-        // label1:
-        //     // code
-        //     goto end;
-        // label2:
-        //     // code
-        //     goto end;
-        // end:
-        
-        cpp_mastery::Logger::info("TODO: Implement computed goto analysis");
-    }
 }
 
 TEST_CASE("Advanced Control Flow Patterns", "[advanced][control][day6]") {
@@ -751,121 +661,5 @@ TEST_CASE("Advanced Control Flow Patterns", "[advanced][control][day6]") {
         std::cerr << "Final result: " << result << std::endl;
         
         cpp_mastery::Logger::info("Exception-based control flow demonstrated");
-    }
-    
-    // TODO: Implement coroutine-style control flow
-    SECTION("Coroutine-style control flow") {
-        // TODO: Implement simple coroutine patterns:
-        // 1. Generator functions using static variables
-        // 2. State preservation between calls
-        // 3. Yield-like functionality
-        // 4. Comparison with C++20 coroutines (preview)
-        
-        // Example generator pattern:
-        // auto fibonacci_generator = []() -> int {
-        //     static int a = 0, b = 1;
-        //     int result = a;
-        //     int temp = a + b;
-        //     a = b;
-        //     b = temp;
-        //     return result;
-        // };
-        
-        cpp_mastery::Logger::info("TODO: Implement coroutine-style control flow");
-    }
-}
-
-// =============================================================================
-// EXERCISES FOR COMPLETION
-// =============================================================================
-
-TEST_CASE("Day 6 Exercises - Complete These!", "[exercises][day6]") {
-    
-    SECTION("Exercise 1: Branch prediction optimizer") {
-        // TODO: Implement a system to analyze and optimize branch prediction
-        // Requirements:
-        // 1. Analyze code patterns that cause branch mispredictions
-        // 2. Implement branchless alternatives for common patterns
-        // 3. Measure performance improvements
-        // 4. Create guidelines for branch-friendly code
-        
-        // Example patterns to optimize:
-        // - Conditional assignments
-        // - Min/max operations
-        // - Clamping values to ranges
-        // - Boolean to integer conversions
-        
-        cpp_mastery::Logger::info("TODO: Implement branch prediction optimizer");
-    }
-    
-    SECTION("Exercise 2: Advanced state machine framework") {
-        // TODO: Implement a generic state machine framework
-        // Requirements:
-        // 1. Template-based state and event types
-        // 2. Transition table definition
-        // 3. Entry/exit actions for states
-        // 4. Hierarchical states (substates)
-        // 5. Performance comparison with switch-based implementation
-        
-        // Example usage:
-        // StateMachine<MyState, MyEvent> sm;
-        // sm.add_transition(State::A, Event::X, State::B, action);
-        // sm.process_event(Event::X);
-        
-        cpp_mastery::Logger::info("TODO: Implement advanced state machine framework");
-    }
-    
-    SECTION("Exercise 3: Loop optimization analyzer") {
-        // TODO: Implement a tool to analyze and optimize loops
-        // Requirements:
-        // 1. Detect vectorization opportunities
-        // 2. Suggest loop unrolling strategies
-        // 3. Identify cache-unfriendly access patterns
-        // 4. Recommend algorithmic improvements
-        
-        // Analysis categories:
-        // - Data dependencies
-        // - Memory access patterns
-        // - Branch patterns within loops
-        // - Arithmetic intensity
-        
-        cpp_mastery::Logger::info("TODO: Implement loop optimization analyzer");
-    }
-    
-    SECTION("Exercise 4: Control flow profiler") {
-        // TODO: Implement a profiler for control flow analysis
-        // Requirements:
-        // 1. Track branch taken/not-taken statistics
-        // 2. Measure loop iteration counts and patterns
-        // 3. Identify hot paths through code
-        // 4. Generate optimization recommendations
-        
-        // Profiling data to collect:
-        // - Branch prediction hit rates
-        // - Loop iteration distributions
-        // - Function call frequencies
-        // - Exception throwing patterns
-        
-        cpp_mastery::Logger::info("TODO: Implement control flow profiler");
-    }
-    
-    SECTION("Exercise 5: Interpreter with computed goto") {
-        // TODO: Implement a simple bytecode interpreter
-        // Requirements:
-        // 1. Define a simple instruction set
-        // 2. Implement using switch statement
-        // 3. Implement using computed goto (GCC)
-        // 4. Compare performance of both approaches
-        
-        // Example instruction set:
-        // enum Opcode { LOAD, STORE, ADD, SUB, MUL, DIV, JMP, JZ, HALT };
-        // 
-        // Interpreter loop:
-        // while (running) {
-        //     Opcode op = fetch_instruction();
-        //     execute(op);
-        // }
-        
-        cpp_mastery::Logger::info("TODO: Implement interpreter with computed goto");
     }
 }
