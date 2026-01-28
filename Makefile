@@ -41,9 +41,6 @@ debug:
 release:
 	$(MAKE) BUILD_FLAGS="$(RELEASE_FLAGS)"
 
-benchmark:
-	$(MAKE) BUILD_FLAGS="$(BENCHMARK_FLAGS)"
-
 # Run specific day (e.g., make run DAY=month1/week01/day01)
 run:
 	@if [ -z "$(DAY)" ]; then echo "Usage: make run DAY=month1/week01/day01"; exit 1; fi

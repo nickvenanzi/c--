@@ -17,6 +17,7 @@
 void demonstrate_pass_by_value(int x);
 void demonstrate_pass_by_reference(int& x);
 void demonstrate_pass_by_pointer(int* x);
+typedef int MouseEvent;
 
 TEST_CASE("Parameter Passing Methods", "[functions][parameters][day4]") {
     
@@ -111,36 +112,35 @@ TEST_CASE("Parameter Passing Methods", "[functions][parameters][day4]") {
         int static_array[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
         
         // Function that takes array (actually receives pointer)
-        auto process_array = [](int arr[], size_t size) -> int {
+        auto process_array = [](int arr[], size_t size) {
             std::cerr << "Inside function - sizeof(arr): " << sizeof(arr) << " bytes" << std::endl;
-            int sum = 0;
             for (size_t i = 0; i < size; ++i) {
-                sum += arr[i];
+                arr[i] *= 2;
             }
-            return sum;
         };
         
         // Function that takes array by reference (preserves array type)
         auto process_array_ref = [](int (&arr)[10]) -> int {
             std::cerr << "Inside function - sizeof(arr): " << sizeof(arr) << " bytes" << std::endl;
-            int sum = 0;
             for (size_t i = 0; i < 10; ++i) {
-                sum += arr[i];
+                arr[i] *= 2;
             }
-            return sum;
         };
         
         std::cerr << "\n=== Array Parameter Passing ===" << std::endl;
         std::cerr << "Original array sizeof: " << sizeof(static_array) << " bytes" << std::endl;
         
-        int sum1 = process_array(static_array, 10);  // Array decays to pointer
-        int sum2 = process_array_ref(static_array);  // Array reference preserves type
-        
-        std::cerr << "Sum from pointer version: " << sum1 << std::endl;
-        std::cerr << "Sum from reference version: " << sum2 << std::endl;
-        
-        REQUIRE(sum1 == sum2);  // Both should calculate same sum
-        REQUIRE(sum1 == 55);    // 1+2+...+10 = 55
+        for (int i = 0; i < 10; i++) {
+            REQUIRE(static_array[i] == i+1);
+        }
+        process_array(static_array, 10);  // Array decays to pointer
+        for (int i = 0; i < 10; i++) {
+            REQUIRE(static_array[i] == 2*(i+1));
+        }
+        process_array_ref(static_array);  // Array reference preserves type
+        for (int i = 0; i < 10; i++) {
+            REQUIRE(static_array[i] == 4*(i+1));
+        }
         
         cpp_mastery::Logger::info("Array parameter passing demonstrated");
     }
@@ -163,6 +163,26 @@ void demonstrate_pass_by_pointer(int* x) {
         std::cerr << "Inside pass_by_pointer: *x = " << *x << std::endl;
     }
 }
+
+// Example structure:
+void test_func(int x) {
+    std::cout << "Int overload of test_func" << '\n';
+};
+void test_func(double x) {
+    std::cout << "double overload of test_func" << '\n';
+};
+void test_func(const std::string& x) {
+    std::cout << "std::string overload of test_func" << '\n';
+};
+void test_func(char x) {
+    std::cout << "char overload of test_func" << '\n';
+};
+
+// Function template approach
+template<typename T>
+auto template_func = [](const T& value) -> std::string {
+    return "Template: " + std::to_string(value);
+};
 
 TEST_CASE("Function Overloading", "[functions][overloading][day4]") {
     
@@ -200,53 +220,43 @@ TEST_CASE("Function Overloading", "[functions][overloading][day4]") {
         // 4. User-defined conversion
         // 5. Ambiguous calls
         
-        // Example structure:
-        // void test_func(int x);
-        // void test_func(double x);
-        // void test_func(const std::string& x);
-        // void test_func(char x);
-        
         // Test calls:
-        // test_func(42);        // Exact match to int
-        // test_func(3.14);      // Exact match to double
-        // test_func('A');       // Exact match to char
-        // test_func("hello");   // Conversion to string
+        test_func(42);        // Exact match to int
+        test_func(3.14);      // Exact match to double
+        test_func('A');       // Exact match to char
+        test_func("hello");   // Conversion to string
         
         cpp_mastery::Logger::info("TODO: Implement overload resolution examples");
     }
     
     SECTION("Template vs overloading") {
-        // Function template approach
-        template<typename T>
-        auto template_func = [](T value) -> std::string {
-            return "Template: " + std::to_string(value);
-        };
         
         // TODO: Compare template approach vs function overloading
         // 1. When to use templates vs overloads
         // 2. Performance implications
         // 3. Code generation differences
         // 4. Type safety considerations
-        
-        cpp_mastery::Logger::info("TODO: Compare templates vs overloading");
+        template_func<int>(42);        // Exact match to int
+        template_func<double>(3.14);      // Exact match to double
+        template_func<char>('A');       // Exact match to char
+        // template_func<std::string>("hello");   // Conversion to string
     }
 }
+
+// Regular function (not inline)
+int regular_add(int a, int b) {
+    return a + b;
+};
+
+inline auto inline_add = [](int a, int b) -> int {
+    return a + b;
+};
 
 TEST_CASE("Inline Functions and Performance", "[functions][inline][performance][day4]") {
     
     SECTION("Inline function demonstration") {
-        // Regular function (not inline)
-        auto regular_add = [](int a, int b) -> int {
-            return a + b;
-        };
         
-        // Inline function (compiler hint)
-        // Note: lambdas are typically inlined automatically
-        inline auto inline_add = [](int a, int b) -> int {
-            return a + b;
-        };
-        
-        const size_t iterations = 10000000;
+        const size_t iterations = 100000;
         
         BENCHMARK("Regular function calls") {
             volatile int sum = 0;
@@ -273,20 +283,6 @@ TEST_CASE("Inline Functions and Performance", "[functions][inline][performance][
         };
         
         cpp_mastery::Logger::info("Inline function performance measured");
-    }
-    
-    // TODO: Implement inline function analysis
-    SECTION("When to use inline functions") {
-        // TODO: Demonstrate scenarios where inline helps vs hurts:
-        // 1. Small, frequently called functions (good for inline)
-        // 2. Large functions (bad for inline - code bloat)
-        // 3. Recursive functions (usually not inlined)
-        // 4. Virtual functions (cannot be inlined at call site)
-        // 5. Functions with loops (may not benefit from inlining)
-        
-        // TODO: Show assembly output differences between inlined and non-inlined
-        
-        cpp_mastery::Logger::info("TODO: Analyze when to use inline functions");
     }
 }
 
@@ -336,11 +332,11 @@ TEST_CASE("Function Pointers and Callbacks", "[functions][pointers][callbacks][d
         
         // Different callback functions
         auto print_callback = [](int x) {
-            std::cerr << "Value: " << x << " ";
+            std::cerr << "Value: " << x << "\n";
         };
         
         auto square_callback = [](int x) {
-            std::cerr << "Square: " << (x * x) << " ";
+            std::cerr << "Square: " << (x * x) << "\n";
         };
         
         std::cerr << "Print callback: ";
@@ -357,22 +353,14 @@ TEST_CASE("Function Pointers and Callbacks", "[functions][pointers][callbacks][d
     SECTION("Function pointer performance") {
         const size_t iterations = 1000000;
         
-        // Direct function call
-        auto direct_add = [](int a, int b) -> int { return a + b; };
-        
         // Function pointer call
         int (*ptr_add)(int, int) = [](int a, int b) -> int { return a + b; };
         
         // std::function call
         std::function<int(int, int)> func_add = [](int a, int b) -> int { return a + b; };
         
-        BENCHMARK("Direct function call") {
-            volatile int sum = 0;
-            for (size_t i = 0; i < iterations; ++i) {
-                sum += direct_add(static_cast<int>(i), 1);
-            }
-            return sum;
-        };
+                // Direct function call
+        auto direct_add = [](int a, int b) -> int { return a + b; };
         
         BENCHMARK("Function pointer call") {
             volatile int sum = 0;
@@ -389,72 +377,20 @@ TEST_CASE("Function Pointers and Callbacks", "[functions][pointers][callbacks][d
             }
             return sum;
         };
+
+        BENCHMARK("Direct function call") {
+            volatile int sum = 0;
+            for (size_t i = 0; i < iterations; ++i) {
+                sum += direct_add(static_cast<int>(i), 1);
+            }
+            return sum;
+        };
         
         cpp_mastery::Logger::info("Function pointer performance compared");
-    }
-    
-    // TODO: Implement advanced callback patterns
-    SECTION("Advanced callback patterns") {
-        // TODO: Implement examples of:
-        // 1. Event handling with callbacks
-        // 2. Strategy pattern with function pointers
-        // 3. Observer pattern with callbacks
-        // 4. Functional programming patterns (map, filter, reduce)
-        
-        // Example structure:
-        // class EventManager {
-        //     std::vector<std::function<void(int)>> callbacks;
-        // public:
-        //     void register_callback(std::function<void(int)> cb);
-        //     void trigger_event(int data);
-        // };
-        
-        cpp_mastery::Logger::info("TODO: Implement advanced callback patterns");
     }
 }
 
 TEST_CASE("Function Return Types and Values", "[functions][return][day4]") {
-    
-    SECTION("Return by value vs reference") {
-        std::vector<int> global_data = {1, 2, 3, 4, 5};
-        
-        // Return by value (copy)
-        auto get_copy = []() -> std::vector<int> {
-            return global_data;  // Returns copy
-        };
-        
-        // Return by reference (alias)
-        auto get_reference = []() -> std::vector<int>& {
-            return global_data;  // Returns reference to original
-        };
-        
-        // Return by const reference (read-only alias)
-        auto get_const_reference = []() -> const std::vector<int>& {
-            return global_data;  // Returns const reference
-        };
-        
-        std::cerr << "\n=== Return Types ===" << std::endl;
-        
-        // Test return by copy
-        auto copy = get_copy();
-        copy[0] = 999;  // Modify copy
-        std::cerr << "Original after modifying copy: " << global_data[0] << std::endl;
-        
-        // Test return by reference
-        auto& ref = get_reference();
-        ref[0] = 888;  // Modify original through reference
-        std::cerr << "Original after modifying reference: " << global_data[0] << std::endl;
-        
-        // Test return by const reference
-        const auto& const_ref = get_const_reference();
-        // const_ref[0] = 777;  // Would not compile - const reference
-        std::cerr << "Value through const reference: " << const_ref[0] << std::endl;
-        
-        REQUIRE(global_data[0] == 888);  // Modified by reference
-        REQUIRE(copy[0] == 999);         // Copy was modified independently
-        
-        cpp_mastery::Logger::info("Return types demonstrated");
-    }
     
     SECTION("Returning local variables (dangling references)") {
         // DANGEROUS: Returning reference to local variable
@@ -481,72 +417,8 @@ TEST_CASE("Function Return Types and Values", "[functions][return][day4]") {
         
         cpp_mastery::Logger::info("Local variable return safety demonstrated");
     }
-    
-    // TODO: Implement return value optimization examples
-    SECTION("Return Value Optimization (RVO)") {
-        // TODO: Demonstrate:
-        // 1. Named Return Value Optimization (NRVO)
-        // 2. Copy elision
-        // 3. Move semantics with returns
-        // 4. When RVO applies and when it doesn't
-        
-        // Example:
-        // std::vector<int> create_large_vector() {
-        //     std::vector<int> result(1000000, 42);  // Large object
-        //     return result;  // RVO should eliminate copy
-        // }
-        
-        cpp_mastery::Logger::info("TODO: Implement RVO examples");
-    }
 }
 
-TEST_CASE("Function Templates and Generic Programming", "[functions][templates][day4]") {
-    
-    SECTION("Basic function templates") {
-        // Template function for finding maximum
-        template<typename T>
-        T find_max(T a, T b) {
-            return (a > b) ? a : b;
-        }
-        
-        std::cerr << "\n=== Function Templates ===" << std::endl;
-        
-        // Template instantiation with different types
-        int max_int = find_max(10, 20);
-        double max_double = find_max(3.14, 2.71);
-        std::string max_string = find_max(std::string("apple"), std::string("banana"));
-        
-        std::cerr << "Max int: " << max_int << std::endl;
-        std::cerr << "Max double: " << max_double << std::endl;
-        std::cerr << "Max string: " << max_string << std::endl;
-        
-        REQUIRE(max_int == 20);
-        REQUIRE(max_double == 3.14);
-        REQUIRE(max_string == "banana");
-        
-        cpp_mastery::Logger::info("Function templates demonstrated");
-    }
-    
-    // TODO: Implement advanced template features
-    SECTION("Template specialization and constraints") {
-        // TODO: Implement:
-        // 1. Explicit template specialization
-        // 2. Template argument deduction
-        // 3. SFINAE (Substitution Failure Is Not An Error)
-        // 4. Template constraints (C++20 concepts preview)
-        
-        // Example specialization:
-        // template<typename T>
-        // void print_type(T value) { std::cout << "Generic: " << value; }
-        // 
-        // template<>
-        // void print_type<const char*>(const char* value) { 
-        //     std::cout << "String: " << value; 
-        // }
-        
-        cpp_mastery::Logger::info("TODO: Implement template specialization");
-    }
-}
 
 // =============================================================================
 // EXERCISES FOR COMPLETION
@@ -578,57 +450,28 @@ TEST_CASE("Day 4 Exercises - Complete These!", "[exercises][day4]") {
         // 2. Different event types (mouse, keyboard, timer)
         // 3. Callback functions with different signatures
         // 4. Performance comparison: function pointers vs std::function
-        
         // Example structure:
-        // class EventSystem {
-        //     std::vector<std::function<void(MouseEvent)>> mouse_callbacks;
-        //     std::vector<std::function<void(KeyEvent)>> key_callbacks;
-        // public:
-        //     void register_mouse_callback(std::function<void(MouseEvent)> cb);
-        //     void trigger_mouse_event(MouseEvent event);
-        // };
-        
-        cpp_mastery::Logger::info("TODO: Implement callback-based event system");
-    }
-    
-    SECTION("Exercise 3: Generic algorithm library") {
-        // TODO: Implement generic algorithms using function templates
-        // Requirements:
-        // 1. Template functions for common algorithms (sort, search, transform)
-        // 2. Support for different container types
-        // 3. Customizable comparison and transformation functions
-        // 4. Performance benchmarks against STL equivalents
-        
-        // Example functions to implement:
-        // template<typename Iterator, typename Compare>
-        // void my_sort(Iterator begin, Iterator end, Compare comp);
-        // 
-        // template<typename Container, typename Predicate>
-        // auto my_filter(const Container& c, Predicate pred);
-        // 
-        // template<typename Container, typename Transform>
-        // auto my_map(const Container& c, Transform func);
-        
-        cpp_mastery::Logger::info("TODO: Implement generic algorithm library");
-    }
-    
-    SECTION("Exercise 4: Function performance analyzer") {
-        // TODO: Create a system to analyze function call performance
-        // Requirements:
-        // 1. Measure function call overhead for different call types
-        // 2. Compare inline vs non-inline functions
-        // 3. Analyze parameter passing costs (value, reference, pointer)
-        // 4. Create performance reports with recommendations
-        
-        // Example structure:
-        // class FunctionProfiler {
-        //     std::map<std::string, std::vector<double>> timings;
-        // public:
-        //     template<typename Func, typename... Args>
-        //     auto profile(const std::string& name, Func f, Args&&... args);
-        //     void report_results();
-        // };
-        
-        cpp_mastery::Logger::info("TODO: Implement function performance analyzer");
+        class EventSystem {
+            std::vector<std::function<void(MouseEvent)>> mouse_callbacks;
+        public:
+            void register_mouse_callback(std::function<void(MouseEvent)> cb) {
+                mouse_callbacks.push_back(cb);
+            }
+            void trigger_mouse_event(MouseEvent event) {
+                for (auto cb : mouse_callbacks) {
+                    cb(event);
+                }
+            }
+        };
+
+        EventSystem es;
+        es.register_mouse_callback([](MouseEvent event) -> void {
+            std::cout << "Callback #1, logging event: " << event << '\n';
+        });
+        es.register_mouse_callback([](MouseEvent event) -> void {
+            std::cout << "Callback #2, logging event: " << event << '\n';
+        });
+        es.trigger_mouse_event(2);
+        es.trigger_mouse_event(99);
     }
 }

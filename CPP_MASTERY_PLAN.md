@@ -631,6 +631,7 @@ Each day: 2-3 hours of focused learning with hands-on coding and testing.
 **Day 88**: Machine Learning Performance
 **Day 89**: Distributed Systems Performance
 **Day 90**: Future C++ Directions
+**Day 91**: C++ Design Patterns
 
 ---
 
