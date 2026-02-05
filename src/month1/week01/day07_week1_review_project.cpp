@@ -160,20 +160,81 @@ private:
 
 class SimpleMemoryManager {
 public:
-    explicit SimpleMemoryManager(size_t pool_size);
-    ~SimpleMemoryManager();
+    explicit SimpleMemoryManager(size_t pool_size) {
+        size_t poolSize = sizeof(size_t) * ((pool_size / sizeof(size_t))+1);
+        data = malloc(poolSize);
+        freed.push_back(data);
+        freedSizes.push_back(poolSize);
+    }
+
+    ~SimpleMemoryManager() {
+        free(data);
+    }
     
-    void* allocate(size_t size);
-    void deallocate(void* ptr);
+    void* allocate(size_t size) {
+        size_t blockSize = sizeof(size_t) * ((size / sizeof(size_t))+1);
+        for (int i = 0; i < freed.size(); i++) {
+            if (freedSizes[i] >= blockSize) { // match!
+                freedSizes[i] -= blockSize;
+                void* block = static_cast<void*>(static_cast<char*>(freed[i]) + (freedSizes[i] - blockSize));
+                allocated.push_back(block);
+                allocatedSizes.push_back(blockSize);
+                if (freedSizes[i] == 0) {
+                    // no fragment leftover - remove from freed list
+                    freed.erase(freed.begin() + i);
+                    freedSizes.erase(freedSizes.begin() + i);
+                }
+                return block;
+            }
+        }
+        return nullptr;
+    }
+
+    void deallocate(void* ptr) {
+        for (int i = 0; i < allocated.size(); i++) {
+            if (allocated[i] == ptr) { // match!
+                freed.push_back(ptr);
+                freedSizes.push_back(allocatedSizes[i]);
+                allocated.erase(allocated.begin() + i);
+                allocatedSizes.erase(allocatedSizes.begin() + i);
+
+                deallocation++;
+                return;
+            }
+        }
+    }
     
-    size_t get_allocated_bytes() const;
-    size_t get_allocation_count() const;
-    size_t get_deallocation_count() const;
-    size_t get_free_block_count() const;
-    size_t get_largest_free_block() const;
+    size_t get_allocated_bytes() const {
+        return std::accumulate(allocatedSizes.begin(), allocatedSizes.end(), 0);
+    }
+
+    size_t get_allocation_count() const {
+        return allocated.size();
+    }
+
+    size_t get_deallocation_count() const {
+        return deallocation;
+    }
+
+    size_t get_free_block_count() const {
+        return freed.size();
+    }
+
+    size_t get_largest_free_block() const {
+        auto max_it = std::max_element(freedSizes.begin(), freedSizes.end());
+        if (max_it != freedSizes.end()) {
+            return *max_it;
+        }
+        return 0;
+    }
 
 private:
-    // TODO: Implement your data structure here
+    void* data;
+    std::vector<void*> allocated;
+    std::vector<size_t> allocatedSizes;
+    std::vector<void*> freed;
+    std::vector<size_t> freedSizes;
+    size_t deallocation = 0;
 };
 
 // =============================================================================
@@ -302,113 +363,113 @@ TEST_CASE("COWString Implementation Tests", "[cowstring][project1][day7]") {
     }
 }
 
-// // =============================================================================
-// // TEST SUITE FOR SimpleMemoryManager
-// // =============================================================================
+// =============================================================================
+// TEST SUITE FOR SimpleMemoryManager
+// =============================================================================
 
-// TEST_CASE("SimpleMemoryManager Implementation Tests", "[memorymanager][project2][day7]") {
+TEST_CASE("SimpleMemoryManager Implementation Tests", "[memorymanager][project2][day7]") {
     
-//     SECTION("Basic allocation and deallocation") {
-//         std::cerr << "\n=== Memory Manager Basic Operations ===" << std::endl;
+    SECTION("Basic allocation and deallocation") {
+        std::cerr << "\n=== Memory Manager Basic Operations ===" << std::endl;
         
-//         SimpleMemoryManager manager(1024);  // 1KB pool
+        SimpleMemoryManager manager(1024);  // 1KB pool
         
-//         // Test basic allocation
-//         void* ptr1 = manager.allocate(100);
-//         REQUIRE(ptr1 != nullptr);
-//         REQUIRE(manager.get_allocated_bytes() >= 100);
-//         REQUIRE(manager.get_allocation_count() == 1);
+        // Test basic allocation
+        void* ptr1 = manager.allocate(100);
+        REQUIRE(ptr1 != nullptr);
+        REQUIRE(manager.get_allocated_bytes() >= 100);
+        REQUIRE(manager.get_allocation_count() == 1);
         
-//         void* ptr2 = manager.allocate(200);
-//         REQUIRE(ptr2 != nullptr);
-//         REQUIRE(ptr2 != ptr1);  // Different pointers
-//         REQUIRE(manager.get_allocation_count() == 2);
+        void* ptr2 = manager.allocate(200);
+        REQUIRE(ptr2 != nullptr);
+        REQUIRE(ptr2 != ptr1);  // Different pointers
+        REQUIRE(manager.get_allocation_count() == 2);
         
-//         // Test memory usage
-//         std::memset(ptr1, 0xAA, 100);
-//         std::memset(ptr2, 0xBB, 200);
+        // Test memory usage
+        std::memset(ptr1, 0xAA, 100);
+        std::memset(ptr2, 0xBB, 200);
         
-//         // Verify memory is usable
-//         REQUIRE(static_cast<unsigned char*>(ptr1)[0] == 0xAA);
-//         REQUIRE(static_cast<unsigned char*>(ptr2)[0] == 0xBB);
+        // Verify memory is usable
+        REQUIRE(static_cast<unsigned char*>(ptr1)[0] == 0xAA);
+        REQUIRE(static_cast<unsigned char*>(ptr2)[0] == 0xBB);
         
-//         // Test deallocation
-//         manager.deallocate(ptr1);
-//         REQUIRE(manager.get_deallocation_count() == 1);
+        // Test deallocation
+        manager.deallocate(ptr1);
+        REQUIRE(manager.get_deallocation_count() == 1);
         
-//         manager.deallocate(ptr2);
-//         REQUIRE(manager.get_deallocation_count() == 2);
+        manager.deallocate(ptr2);
+        REQUIRE(manager.get_deallocation_count() == 2);
         
-//         std::cerr << "Basic operations tests passed" << std::endl;
-//     }
+        std::cerr << "Basic operations tests passed" << std::endl;
+    }
     
-//     SECTION("Block reuse and fragmentation") {
-//         std::cerr << "\n=== Memory Manager Block Reuse ===" << std::endl;
+    SECTION("Block reuse and fragmentation") {
+        std::cerr << "\n=== Memory Manager Block Reuse ===" << std::endl;
         
-//         SimpleMemoryManager manager(1024);
+        SimpleMemoryManager manager(1024);
         
-//         // Allocate several blocks
-//         void* ptr1 = manager.allocate(100);
-//         void* ptr2 = manager.allocate(100);
-//         void* ptr3 = manager.allocate(100);
+        // Allocate several blocks
+        void* ptr1 = manager.allocate(100);
+        void* ptr2 = manager.allocate(100);
+        void* ptr3 = manager.allocate(100);
         
-//         REQUIRE(ptr1 != nullptr);
-//         REQUIRE(ptr2 != nullptr);
-//         REQUIRE(ptr3 != nullptr);
+        REQUIRE(ptr1 != nullptr);
+        REQUIRE(ptr2 != nullptr);
+        REQUIRE(ptr3 != nullptr);
         
-//         // Free middle block
-//         manager.deallocate(ptr2);
+        // Free middle block
+        manager.deallocate(ptr2);
         
-//         // Allocate block that should fit in freed space
-//         void* ptr4 = manager.allocate(50);  // Smaller than freed block
-//         REQUIRE(ptr4 != nullptr);
+        // Allocate block that should fit in freed space
+        void* ptr4 = manager.allocate(50);  // Smaller than freed block
+        REQUIRE(ptr4 != nullptr);
         
-//         // Check fragmentation
-//         size_t free_blocks = manager.get_free_block_count();
-//         std::cerr << "Free blocks after reallocation: " << free_blocks << std::endl;
+        // Check fragmentation
+        size_t free_blocks = manager.get_free_block_count();
+        std::cerr << "Free blocks after reallocation: " << free_blocks << std::endl;
         
-//         // Clean up
-//         manager.deallocate(ptr1);
-//         manager.deallocate(ptr3);
-//         manager.deallocate(ptr4);
+        // Clean up
+        manager.deallocate(ptr1);
+        manager.deallocate(ptr3);
+        manager.deallocate(ptr4);
         
-//         std::cerr << "Block reuse tests passed" << std::endl;
-//     }
+        std::cerr << "Block reuse tests passed" << std::endl;
+    }
     
-//     SECTION("Alignment and edge cases") {
-//         std::cerr << "\n=== Memory Manager Alignment ===" << std::endl;
+    SECTION("Alignment and edge cases") {
+        std::cerr << "\n=== Memory Manager Alignment ===" << std::endl;
         
-//         SimpleMemoryManager manager(1024);
+        SimpleMemoryManager manager(1024);
         
-//         // Test alignment
-//         void* ptr1 = manager.allocate(1);
-//         void* ptr2 = manager.allocate(1);
+        // Test alignment
+        void* ptr1 = manager.allocate(1);
+        void* ptr2 = manager.allocate(1);
         
-//         REQUIRE(ptr1 != nullptr);
-//         REQUIRE(ptr2 != nullptr);
+        REQUIRE(ptr1 != nullptr);
+        REQUIRE(ptr2 != nullptr);
         
-//         // Check pointer alignment
-//         uintptr_t addr1 = reinterpret_cast<uintptr_t>(ptr1);
-//         uintptr_t addr2 = reinterpret_cast<uintptr_t>(ptr2);
+        // Check pointer alignment
+        uintptr_t addr1 = reinterpret_cast<uintptr_t>(ptr1);
+        uintptr_t addr2 = reinterpret_cast<uintptr_t>(ptr2);
         
-//         REQUIRE(addr1 % sizeof(void*) == 0);  // Should be aligned
-//         REQUIRE(addr2 % sizeof(void*) == 0);  // Should be aligned
+        REQUIRE(addr1 % sizeof(void*) == 0);  // Should be aligned
+        REQUIRE(addr2 % sizeof(void*) == 0);  // Should be aligned
         
-//         // Test nullptr handling
-//         manager.deallocate(nullptr);  // Should not crash
-//         REQUIRE(manager.get_deallocation_count() == 0);  // Should not count nullptr
+        // Test nullptr handling
+        manager.deallocate(nullptr);  // Should not crash
+        REQUIRE(manager.get_deallocation_count() == 0);  // Should not count nullptr
         
-//         // Test allocation failure
-//         void* huge_ptr = manager.allocate(2048);  // Larger than pool
-//         REQUIRE(huge_ptr == nullptr);
+        // Test allocation failure
+        void* huge_ptr = manager.allocate(2048);  // Larger than pool
+        REQUIRE(huge_ptr == nullptr);
         
-//         // Clean up
-//         manager.deallocate(ptr1);
-//         manager.deallocate(ptr2);
+        // Clean up
+        manager.deallocate(ptr1);
+        manager.deallocate(ptr2);
         
-//         std::cerr << "Alignment and edge cases tests passed" << std::endl;
-//     }
-// }
+        std::cerr << "Alignment and edge cases tests passed" << std::endl;
+    }
+}
 
 // =============================================================================
 // PERFORMANCE BENCHMARKS
@@ -449,41 +510,41 @@ TEST_CASE("Performance Benchmarks", "[benchmark][performance][day7]") {
         std::cerr << "COWString performance benchmark completed" << std::endl;
     }
     
-    // SECTION("Memory manager vs malloc/free performance") {
-    //     std::cerr << "\n=== Memory Manager Performance Benchmark ===" << std::endl;
+    SECTION("Memory manager vs malloc/free performance") {
+        std::cerr << "\n=== Memory Manager Performance Benchmark ===" << std::endl;
         
-    //     const size_t iterations = 10000;
-    //     const size_t alloc_size = 64;
+        const size_t iterations = 10000;
+        const size_t alloc_size = 64;
         
-    //     BENCHMARK("malloc/free") {
-    //         volatile size_t total_allocated = 0;
+        BENCHMARK("malloc/free") {
+            volatile size_t total_allocated = 0;
             
-    //         for (size_t i = 0; i < iterations; ++i) {
-    //             void* ptr = std::malloc(alloc_size);
-    //             if (ptr) {
-    //                 total_allocated += alloc_size;
-    //                 std::free(ptr);
-    //             }
-    //         }
+            for (size_t i = 0; i < iterations; ++i) {
+                void* ptr = std::malloc(alloc_size);
+                if (ptr) {
+                    total_allocated += alloc_size;
+                    std::free(ptr);
+                }
+            }
             
-    //         return total_allocated;
-    //     };
+            return total_allocated;
+        };
+
+        BENCHMARK("SimpleMemoryManager") {
+            SimpleMemoryManager manager(alloc_size * iterations * 2);  // Large enough pool
+            volatile size_t total_allocated = 0;
+            
+            for (size_t i = 0; i < iterations; ++i) {
+                void* ptr = manager.allocate(alloc_size);
+                if (ptr) {
+                    total_allocated += alloc_size;
+                    manager.deallocate(ptr);
+                }
+            }
+            
+            return total_allocated;
+        };
         
-    //     BENCHMARK("SimpleMemoryManager") {
-    //         SimpleMemoryManager manager(alloc_size * iterations * 2);  // Large enough pool
-    //         volatile size_t total_allocated = 0;
-            
-    //         for (size_t i = 0; i < iterations; ++i) {
-    //             void* ptr = manager.allocate(alloc_size);
-    //             if (ptr) {
-    //                 total_allocated += alloc_size;
-    //                 manager.deallocate(ptr);
-    //             }
-    //         }
-            
-    //         return total_allocated;
-    //     };
-        
-    //     std::cerr << "Memory manager performance benchmark completed" << std::endl;
-    // }
+        std::cerr << "Memory manager performance benchmark completed" << std::endl;
+    }
 }
