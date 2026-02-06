@@ -26,7 +26,8 @@ all: setup $(BINS)
 
 setup:
 	@mkdir -p $(BIN_DIR) $(RESULTS_DIR)
-	@mkdir -p $(BIN_DIR)/month1 $(BIN_DIR)/month2 $(BIN_DIR)/month3
+	@mkdir -p $(BIN_DIR)/month1/week01 $(BIN_DIR)/month1/week02 $(BIN_DIR)/month1/week03 $(BIN_DIR)/month1/week04
+	@mkdir -p $(BIN_DIR)/month2 $(BIN_DIR)/month3
 
 # Build each source file
 $(BIN_DIR)/%: $(SRC_DIR)/%.cpp | setup
