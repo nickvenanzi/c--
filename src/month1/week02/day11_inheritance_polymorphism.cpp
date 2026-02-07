@@ -266,5 +266,6 @@ int main() {
     std::unique_ptr<Shape> s = std::make_unique<Rectangle>(3, 4);
     std::cout << s->area() << '\n';
 
+    
     return 0;
 }
